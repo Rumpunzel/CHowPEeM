@@ -1,0 +1,177 @@
+[gd_scene load_steps=24 format=2]
+
+[ext_resource path="res://icon.png" type="Texture" id=1]
+[ext_resource path="res://BirdFlying.gd" type="Script" id=2]
+[ext_resource path="res://MoveDestination.gd" type="Script" id=3]
+[ext_resource path="res://bird/BirdFlying_atlas_1.png" type="Texture" id=4]
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 25.376, 30.6435 )
+
+[sub_resource type="Animation" id=15]
+resource_name = "Fly_Idle"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 8, 10, 8, 6 ]
+}
+
+[sub_resource type="Animation" id=16]
+resource_name = "Fly_horiz"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 2, 0, 2, 4 ]
+}
+
+[sub_resource type="Animation" id=17]
+resource_name = "Land"
+length = 0.8
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 7, 1, 5, 3 ]
+}
+
+[sub_resource type="Animation" id=18]
+resource_name = "Land_Idle"
+length = 5.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 1, 1.2, 1.4, 1.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 3, 5, 1, 3 ]
+}
+
+[sub_resource type="AnimationNodeAnimation" id=19]
+animation = "Fly_Idle"
+
+[sub_resource type="AnimationNodeAnimation" id=20]
+animation = "Fly_horiz"
+
+[sub_resource type="AnimationNodeAnimation" id=21]
+animation = "Land"
+
+[sub_resource type="AnimationNodeAnimation" id=22]
+animation = "Land_Idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=23]
+switch_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=24]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=26]
+switch_mode = 2
+auto_advance = true
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=29]
+switch_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=30]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=31]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=32]
+
+[sub_resource type="AnimationNodeStateMachine" id=27]
+states/Fly_Idle/node = SubResource( 19 )
+states/Fly_Idle/position = Vector2( 174, 92 )
+states/Fly_horiz/node = SubResource( 20 )
+states/Fly_horiz/position = Vector2( 378, 98 )
+states/Land/node = SubResource( 21 )
+states/Land/position = Vector2( 145, 220 )
+states/Land_Idle/node = SubResource( 22 )
+states/Land_Idle/position = Vector2( 430, 220 )
+transitions = [ "Fly_Idle", "Fly_horiz", SubResource( 23 ), "Fly_Idle", "Land", SubResource( 24 ), "Land", "Land_Idle", SubResource( 26 ), "Fly_horiz", "Fly_Idle", SubResource( 29 ), "Land_Idle", "Fly_horiz", SubResource( 30 ), "Land_Idle", "Fly_Idle", SubResource( 31 ), "Fly_horiz", "Land", SubResource( 32 ) ]
+start_node = "Fly_horiz"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=28]
+
+[sub_resource type="RectangleShape2D" id=4]
+
+[node name="Bird" type="Node2D"]
+position = Vector2( 528.279, 241.53 )
+
+[node name="KinematicBody2D" type="KinematicBody2D" parent="."]
+script = ExtResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KinematicBody2D"]
+shape = SubResource( 3 )
+
+[node name="BirdSprite" type="Sprite" parent="KinematicBody2D"]
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 4 )
+vframes = 6
+hframes = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="KinematicBody2D"]
+playback_speed = 2.0
+anims/Fly_Idle = SubResource( 15 )
+anims/Fly_horiz = SubResource( 16 )
+anims/Land = SubResource( 17 )
+anims/Land_Idle = SubResource( 18 )
+
+[node name="AnimationTree" type="AnimationTree" parent="KinematicBody2D/AnimationPlayer"]
+tree_root = SubResource( 27 )
+anim_player = NodePath("..")
+active = true
+root_motion_track = NodePath("AnimatedSprite:frame")
+parameters/playback = SubResource( 28 )
+
+[node name="Destination" type="KinematicBody2D" parent="."]
+position = Vector2( 70.4205, -53.9391 )
+collision_layer = 0
+collision_mask = 0
+script = ExtResource( 3 )
+
+[node name="Sprite" type="Sprite" parent="Destination"]
+visible = false
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Destination"]
+shape = SubResource( 4 )
+
+[node name="Camera2D" type="Camera2D" parent="Destination"]
+position = Vector2( -70.4205, 53.9391 )
+current = true
+smoothing_enabled = true
+
+[node name="Label" type="Label" parent="Destination/Camera2D"]
+margin_left = -495.0
+margin_top = -221.0
+margin_right = -228.0
+margin_bottom = -169.0
+__meta__ = {
+"_edit_use_anchors_": false
+}

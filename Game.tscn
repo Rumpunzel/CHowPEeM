@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Bird.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Treeline.png" type="Texture" id=2]
+[ext_resource path="res://Mountaints.png" type="Texture" id=3]
+
+[sub_resource type="CanvasItemMaterial" id=1]
+
+[node name="Game" type="Node2D"]
+
+[node name="Bird" parent="." instance=ExtResource( 1 )]
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+follow_viewport_enable = true
+scroll_offset = Vector2( 1, 0 )
+
+[node name="Foreground" type="ParallaxLayer" parent="ParallaxBackground"]
+z_index = -4
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Foreground"]
+material = SubResource( 1 )
+position = Vector2( 576.855, -15.1361 )
+scale = Vector2( 2.11844, 2.11844 )
+z_index = -5
+texture = ExtResource( 2 )
+
+[node name="Background" type="ParallaxLayer" parent="ParallaxBackground"]
+z_index = -5
+motion_scale = Vector2( 0.05, 0.05 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Background"]
+position = Vector2( 574.948, -528.489 )
+scale = Vector2( 2.10353, 2.10353 )
+z_index = -10
+texture = ExtResource( 3 )
