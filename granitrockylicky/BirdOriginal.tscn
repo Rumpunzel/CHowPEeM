@@ -1,0 +1,285 @@
+[gd_scene load_steps=24 format=2]
+
+[ext_resource path="res://icon.png" type="Texture" id=1]
+[ext_resource path="res://MoveDestination.gd" type="Script" id=3]
+[ext_resource path="res://bird/BirdFlying_atlas_1.png" type="Texture" id=4]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+const MAX_VERTICAL_VELOCITY: float = 6.0
+const MAX_HORIZONTAL_VELOCITY: float = 3.0
+const STOP_DISTANCE: float = 50.0
+const MAX_SPEED: float = 5.0
+const JUMP_FORCE: float = 3.0
+const GRAVITY: float = 1.75
+const FOLLOW_SPEED: float = 0.02
+const DRAG: float = 0.1
+
+var sprite: Sprite
+
+var label: Label
+var dest: Vector2
+
+var playing: bool = false  # just to start the game with first click
+var velocity: Vector2 = Vector2(0.0, 0.0)
+var pressed_jump: bool = false
+
+func _ready():
+	pressed_jump = false
+	label = get_node(\"../Destination/Camera2D/Label\")
+	sprite = get_node(\"BirdSprite\")
+
+func _physics_process(delta):
+	
+	#This is left in from the code I stole from lick.
+	#TODO: Make into a dive 
+	if pressed_jump:
+		velocity.y = -JUMP_FORCE
+	
+	#This is the target position we are flying at
+	dest = get_node(\"../Destination\").position
+	
+	#Raw distance to our destination
+	var distance_to_destination = Vector2(
+		dest.x - position.x,
+		dest.y - position.y).length()
+		
+	#This is a normalized vector that gives us the relative direction of the 
+	# target from the bird
+	var flying_direction = Vector2(
+		dest.x - position.x,
+		dest.y - position.y).normalized()
+		
+	#Flip the sprite if going left (Saves on animation computation)
+	if flying_direction.x < 0.0:
+		sprite.scale = Vector2(-0.25, 0.25)
+	else:
+		sprite.scale = Vector2(0.25, 0.25)
+	
+	#--------------------------------------------------------------------------
+	#-------FLYING NONSENSE
+	#--------------------------------------------------------------------------
+	velocity *= 1 - DRAG
+	
+	#If we are far enough from the target, accelerate toward it
+	if distance_to_destination > STOP_DISTANCE:
+		velocity +=  flying_direction * (FOLLOW_SPEED * distance_to_destination / MAX_SPEED)
+	#If we are close to the target, slow down our acceleration
+	else:
+		velocity +=  Vector2(flying_direction.x * (FOLLOW_SPEED * (distance_to_destination / MAX_SPEED)) / 2, 0.0)
+	
+	#Only apply gravity if the bird is stopped
+	var cur_speed = velocity.length()
+	if cur_speed <= 0.5:
+		velocity.y += delta * GRAVITY
+	
+	#This is where the actual bird is flying, not just the angle to the target
+	var real_direction = velocity.normalized()
+	
+	#Cap our movement speed
+	if abs(velocity.x) > MAX_HORIZONTAL_VELOCITY:
+		velocity.x = real_direction.x * MAX_HORIZONTAL_VELOCITY
+	if abs(velocity.y) > MAX_VERTICAL_VELOCITY:
+		velocity.y = real_direction.y * MAX_VERTICAL_VELOCITY
+		
+	#This is really gross, and needs a lot of cleaning.
+	#It rotates the bird and chooses the animation based on the birds direction
+	#The Dot product tells us how \"Vertical\" the intended direction is
+	# -1.0 is straight up, 1.0 is straight down
+	# currently not used.
+	var anim_angle = Vector2(0.0, 1.0).dot(flying_direction)
+	
+	var tree = $AnimationPlayer/AnimationTree.get(\"parameters/playback\")
+	#If we're close enough to the \"Stop Zone\", play the idle animation
+	if distance_to_destination < STOP_DISTANCE:
+		sprite.rotation = 0.0
+		tree.travel(\"Fly_Idle\")
+	#if not, we're flying. These angles are all kinds of dumb and need cleaning
+	else:
+		if real_direction.x < 0.0:
+			sprite.rotation = (real_direction * -1.0).angle()
+		else:
+			sprite.rotation = real_direction.angle()
+		tree.travel(\"Fly_horiz\")
+		
+	label.text = \"X: \" +  str(flying_direction.y) + \", Y: \" + str(flying_direction.y)
+	
+	#I left this in from lick's code, too. It can be updated to have the bird bounce around
+	# Since the target doesn't move, the bird will keep trying to fly at it.
+	var collision: KinematicCollision2D = move_and_collide(velocity)
+	if collision:
+		velocity.x = -velocity.x / 2
+
+func _process(_delta):
+	pressed_jump = Input.is_action_just_pressed(\"ui_accept\")
+	
+	if not playing and pressed_jump:
+		playing = true
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 25.376, 30.6435 )
+
+[sub_resource type="Animation" id=3]
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 8, 10, 8, 6 ]
+}
+
+[sub_resource type="Animation" id=4]
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.25, 0.5, 0.75 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 2, 0, 2, 4 ]
+}
+
+[sub_resource type="Animation" id=5]
+length = 0.8
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 7, 1, 5, 3 ]
+}
+
+[sub_resource type="Animation" id=6]
+length = 5.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("BirdSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 1, 1.2, 1.4, 1.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 3, 5, 1, 3 ]
+}
+
+[sub_resource type="AnimationNodeAnimation" id=7]
+animation = "Fly_Idle"
+
+[sub_resource type="AnimationNodeAnimation" id=8]
+animation = "Fly_horiz"
+
+[sub_resource type="AnimationNodeAnimation" id=9]
+animation = "Land"
+
+[sub_resource type="AnimationNodeAnimation" id=10]
+animation = "Land_Idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=11]
+switch_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=12]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=13]
+switch_mode = 2
+auto_advance = true
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=14]
+switch_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=15]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=16]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=17]
+
+[sub_resource type="AnimationNodeStateMachine" id=18]
+states/Fly_Idle/node = SubResource( 7 )
+states/Fly_Idle/position = Vector2( 174, 92 )
+states/Fly_horiz/node = SubResource( 8 )
+states/Fly_horiz/position = Vector2( 378, 98 )
+states/Land/node = SubResource( 9 )
+states/Land/position = Vector2( 145, 220 )
+states/Land_Idle/node = SubResource( 10 )
+states/Land_Idle/position = Vector2( 430, 220 )
+transitions = [ "Fly_Idle", "Fly_horiz", SubResource( 11 ), "Fly_Idle", "Land", SubResource( 12 ), "Land", "Land_Idle", SubResource( 13 ), "Fly_horiz", "Fly_Idle", SubResource( 14 ), "Land_Idle", "Fly_horiz", SubResource( 15 ), "Land_Idle", "Fly_Idle", SubResource( 16 ), "Fly_horiz", "Land", SubResource( 17 ) ]
+start_node = "Fly_horiz"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=19]
+
+[sub_resource type="RectangleShape2D" id=20]
+
+[node name="Bird" type="Node2D"]
+position = Vector2( 528.279, 241.53 )
+
+[node name="KinematicBody2D" type="KinematicBody2D" parent="."]
+script = SubResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KinematicBody2D"]
+shape = SubResource( 2 )
+
+[node name="BirdSprite" type="Sprite" parent="KinematicBody2D"]
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 4 )
+vframes = 6
+hframes = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="KinematicBody2D"]
+playback_speed = 2.0
+anims/Fly_Idle = SubResource( 3 )
+anims/Fly_horiz = SubResource( 4 )
+anims/Land = SubResource( 5 )
+anims/Land_Idle = SubResource( 6 )
+
+[node name="AnimationTree" type="AnimationTree" parent="KinematicBody2D/AnimationPlayer"]
+tree_root = SubResource( 18 )
+anim_player = NodePath("..")
+active = true
+root_motion_track = NodePath("AnimatedSprite:frame")
+parameters/playback = SubResource( 19 )
+
+[node name="Destination" type="KinematicBody2D" parent="."]
+position = Vector2( 70.4205, -53.9391 )
+collision_layer = 0
+collision_mask = 0
+script = ExtResource( 3 )
+
+[node name="Sprite" type="Sprite" parent="Destination"]
+visible = false
+scale = Vector2( 0.25, 0.25 )
+texture = ExtResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Destination"]
+shape = SubResource( 20 )
+
+[node name="Camera2D" type="Camera2D" parent="Destination"]
+position = Vector2( -70.4205, 53.9391 )
+current = true
+smoothing_enabled = true
+
+[node name="Label" type="Label" parent="Destination/Camera2D"]
+margin_left = -495.0
+margin_top = -221.0
+margin_right = -228.0
+margin_bottom = -169.0
+__meta__ = {
+"_edit_use_anchors_": false
+}

@@ -1,0 +1,97 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Bird.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Treeline.png" type="Texture" id=2]
+[ext_resource path="res://Mountaints.png" type="Texture" id=3]
+[ext_resource path="res://CanvasLayer.gd" type="Script" id=4]
+
+[sub_resource type="CanvasItemMaterial" id=1]
+
+[node name="Game" type="Node2D"]
+
+[node name="Bird" parent="." instance=ExtResource( 1 )]
+position = Vector2( 402.922, -116.41 )
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+follow_viewport_enable = true
+scroll_offset = Vector2( 1, 0 )
+
+[node name="Foreground" type="ParallaxLayer" parent="ParallaxBackground"]
+z_index = -4
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Foreground"]
+modulate = Color( 0.431373, 0.231373, 0.4, 1 )
+material = SubResource( 1 )
+position = Vector2( 576.855, -15.1361 )
+scale = Vector2( 2.11844, 2.11844 )
+z_index = -5
+texture = ExtResource( 2 )
+
+[node name="Background" type="ParallaxLayer" parent="ParallaxBackground"]
+z_index = -5
+motion_scale = Vector2( 0.05, 0.05 )
+
+[node name="Sprite" type="Sprite" parent="ParallaxBackground/Background"]
+modulate = Color( 0.431373, 0.231373, 0.4, 1 )
+position = Vector2( 574.948, -528.489 )
+scale = Vector2( 2.10353, 2.10353 )
+z_index = -10
+texture = ExtResource( 3 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+script = ExtResource( 4 )
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/margin_right = 20
+custom_constants/margin_top = 20
+custom_constants/margin_left = 20
+custom_constants/margin_bottom = 20
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer"]
+margin_left = 20.0
+margin_top = 20.0
+margin_right = 1004.0
+margin_bottom = 580.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
+margin_right = 196.0
+margin_bottom = 560.0
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
+margin_right = 196.0
+margin_bottom = 48.0
+text = "To divebomb, hold Space and fly downwards. Then release Space Bar for the boost."
+autowrap = true
+
+[node name="DiveBombForce" type="Label" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
+margin_top = 52.0
+margin_right = 196.0
+margin_bottom = 66.0
+text = "Dive Bomb Force: "
+
+[node name="HSlider" type="HSlider" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
+margin_top = 70.0
+margin_right = 196.0
+margin_bottom = 86.0
+max_value = 35.0
+
+[node name="Label2" type="Label" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
+margin_top = 90.0
+margin_right = 196.0
+margin_bottom = 104.0
+text = "Use Q and E for quick dashes"
+autowrap = true
+
+[node name="TakingUpSpace" type="Control" parent="CanvasLayer/MarginContainer/HBoxContainer"]
+margin_left = 200.0
+margin_right = 984.0
+margin_bottom = 560.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+[connection signal="divebombforce_updated" from="Bird" to="CanvasLayer" method="_on_Bird_divebombforce_updated"]
